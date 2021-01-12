@@ -2,6 +2,7 @@ import requests
 import datetime
 from bs4 import BeautifulSoup
 from parser.parser_config import month_dict, year, url_470
+from parser.event import *
 
 
 def find_date(content):
@@ -45,25 +46,23 @@ def find_name(content):
     return [name_text, place, name_href, tags]
 
 
-def get_data_470():
+def event_dict(cont):
+    date = find_date(cont)
+    name = find_name(cont)
+    regatta_dict = {
+        'YachtClass': '470',
+        'RegattaName': name[0],
+        'RegattaStartDate': date[0],
+        'RegattaEndDate': date[1],
+        'RegattaLocation': name[1],
+        'Url': name[2],
+        'Tags': name[3]
+    }
+    return regatta_dict
+
+
+def get_data_470() -> list:
     response = requests.get(url_470)
     soup = BeautifulSoup(response.text, 'lxml')
     content = soup.find('div', class_="content").find('div', class_='row').find_all('div', recursive=False)[3:-1]
-    data = []
-    for c in content:
-        date = find_date(c)
-        name = find_name(c)
-        regatta_dict = {
-            'YachtClass': '470',
-            'RegattaName': name[0],
-            'RegattaStartDate': date[0],
-            'RegattaEndDate': date[1],
-            'RegattaLocation': name[1],
-            'Url': name[2],
-            'Tags': name[3]
-        }
-        data.append(regatta_dict)
-        print(regatta_dict)
-
-
-get_data_470()
+    return [event(event_dict(i)) for i in content]
