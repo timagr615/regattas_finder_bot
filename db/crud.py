@@ -27,3 +27,10 @@ def delete_regatta(db: Session, regatta_name: str):
 def get_regattas(db: Session):
     regattas = db.query(models.Regatta).all()
     return [event_from_db(r) for r in regattas]
+
+
+def get_regattas_by_yacht(db: Session, yacht: str):
+    if yacht == '49er FX':
+        yacht = '49er'
+    regattas = db.query(models.Regatta).filter(models.Regatta.yachtclass == yacht)
+    return [event_from_db(r) for r in regattas]

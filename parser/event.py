@@ -1,4 +1,3 @@
-import json
 from pydantic import BaseModel
 from db.models import Regatta
 import datetime
@@ -27,7 +26,7 @@ def event_from_db(regatta: Regatta) -> Event:
         'YachtClass': regatta.yachtclass,
         'RegattaName': regatta.regattaname,
         'RegattaStartDate': regatta.regattastartdate,
-        'RegattaEndDate': regatta.regattastartdate,
+        'RegattaEndDate': regatta.regattaenddate,
         'RegattaLocation': regatta.regattalocation,
         'Url': regatta.url,
         'Tags': tags
