@@ -1,9 +1,12 @@
+import os
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from core import dp
-from bot.find_regatta.find_response import date_response, name_response
+from aiogram.types import InputFile
+from core import dp, bot
+from bot.find_regatta.find_response import date_response, name_response, text_answer
+from bot.find_regatta.pdf_response import pdf_table
 from db.utils import *
 
 
@@ -79,23 +82,35 @@ async def process_filter(message: Message, state: FSMContext):
 async def process_filter_type(message: Message, state: FSMContext):
     async with state.proxy() as data:
         data['filter_type'] = message.text
-    dat = str(data)
     if data['filter_type'] in ['Январь-Март', 'Апрель-Июнь', 'Июль-Сентябрь', 'Октябрь-Декабрь', 'Весь год']:
         responses = date_response(data)
         if responses:
-            for r in responses:
-                await message.reply(r, reply=False, reply_markup=ReplyKeyboardRemove())
+            if len(responses) < 6:
+                for r in responses:
+                    await message.reply(text_answer(r), parse_mode='HTML', reply=False,
+                                        reply_markup=ReplyKeyboardRemove())
+            else:
+                pdf_table(responses)
+                # f = os.path.abspath(os.curdir) + '/event_table.pdf'
+                await message.answer('В выбранный период слишком много соревнований. '
+                                     'Вам будет отправлен pdf файл', reply_markup=ReplyKeyboardRemove())
+                await bot.send_document(message.from_user.id, document=InputFile('event_table.pdf'))
+
         else:
             await message.reply('В выбранный период нет соревнований', reply_markup=ReplyKeyboardRemove())
     else:
         responses = name_response(data)
         if responses:
-            for r in responses:
-                await message.reply(r, reply=False, reply_markup=ReplyKeyboardRemove())
+            if len(responses) < 6:
+                for r in responses:
+                    await message.reply(text_answer(r), parse_mode='HTML', reply=False,
+                                        reply_markup=ReplyKeyboardRemove())
+            else:
+                pdf_table(responses)
+                await message.answer('По выбранному имени слишком много соревнований. '
+                                     'Вам будет отправлен pdf файл.', reply_markup=ReplyKeyboardRemove())
+                await bot.send_document(message.from_user.id, document=InputFile('event_table.pdf'))
+
         else:
             await message.reply('По введённому названию ничего не найдено', reply_markup=ReplyKeyboardRemove())
     await state.finish()
-
-
-
-
